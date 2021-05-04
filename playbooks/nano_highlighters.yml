@@ -1,0 +1,52 @@
+---
+# Install syntax highlighters for nano
+- name: Install nano syntax highilights on WORKSTATION nodes only
+  hosts: workstations
+  become: true
+
+  vars_files:
+    - "../vars/nano_highlighters.yml"
+
+  # vars:
+  #   tmp_folder: "/tmp"
+  #   nano_highlights_git_url: "https://github.com/serialhex/nano-highlight.git"
+  #   nano_highlights_git_version: "latest"
+  #   nano_highlights_name: "nano-highlights2"
+  #   nano_syntax_nanorc_folder: "/usr/share/nano"
+
+  tasks:
+
+    - name: "Clone repo {{ nano_highlights_name }}."
+      git:
+        repo: "{{ nano_highlights_git_url }}"
+        dest: "{{ tmp_folder }}/{{ nano_highlights_name }}"
+        version: "{{ nano_highlights_git_version }}"
+
+    - name: Find Files to copy.
+      find:
+        paths: "{{ tmp_folder }}/{{ nano_highlights_name }}"
+        recurse: true
+        patterns: "*.nanorc"
+      register: files_to_copy
+
+    - name: "Copy syntax (.nanorc) files into {{ nano_syntax_nanorc_folder }}."
+      copy:
+        src: "{{ item.path }}"
+        dest: "{{ nano_syntax_nanorc_folder }}"
+        remote_src: true
+        owner: root
+        mode: 0644
+      with_items: "{{ files_to_copy.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+#    - name: Copy syntax files into nano directory.
+#      copy:
+#        src: "{{ tmp_folder }}/{{ nano_highlights_name }}/*.nanorc"
+#        dest: "{{ nano_syntax_nanorc_folder }}"
+#        remote_src: true
+#        result: copy_msg
+
+#    - name: Copy messages.
+#      debug:
+#        msg: "{{ copy_msg.stdout_lines }}"

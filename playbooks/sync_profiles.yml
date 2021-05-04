@@ -1,0 +1,57 @@
+---
+# Synchronize nodes setups with current one
+- name: >-
+    COPY user setup (.profile, .vimrc, .nanorc, .ssh/,
+    .gitconfig, .backups.sh) to the rest nodes
+  #  hosts: all
+  # all nodes except the first one in inventory file i
+  # (if playbook runs from one of managed servers)
+  hosts: all[1:]
+
+  tasks:
+
+    - name: Syncing following user config files
+      copy:
+        src: "~/{{ item }}"
+        dest: "~/"
+        mode: 0644
+      register: copy_msg
+      loop_control:
+        label: " ~/{{ item }}"
+      with_items:
+        - ".profile"
+        - ".vimrc"
+        - ".nanorc"
+        - ".gitconfig"
+        - ".dropbox_uploader"
+        #        - ".backups.config"
+        #        - ".backups-filelist"
+
+    - name: Syncing following user executable files
+      copy:
+        src: "~/{{ item }}"
+        dest: "~/"
+        mode: 0744
+      register: copy_msg
+      loop_control:
+        label: " ~/{{ item }}"
+      with_items:
+        - ".backups.sh"
+
+    - name: Syncing SSH files
+      copy:
+        src: "~/{{ item }}"
+        dest: "~/.ssh/"
+        mode: 0600
+      register: copy_msg
+      loop_control:
+        label: " ~/{{ item }}"
+      with_items:
+        - ".ssh/authorized_keys"
+        - ".ssh/id_dsa"
+        - ".ssh/id_dsa.pub"
+
+        #    - name: Copy messages
+        #      debug:
+        #        msg: "{{ copy_msg.stdout_lines }}"
+        #

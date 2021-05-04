@@ -1,0 +1,7 @@
+---
+# variables for installation
+tmp_folder: "/tmp"
+nano_highlights_git_url: "https://github.com/serialhex/nano-highlight.git"
+nano_highlights_git_version: "HEAD"
+nano_highlights_name: "nano-highlight"
+nano_syntax_nanorc_folder: "/usr/share/nano"
