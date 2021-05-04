@@ -38,6 +38,14 @@
       with_items:
         - ".backups.sh"
 
+    # - name: Find SSH keys to copy
+    #   find:
+    #     paths: "~/.ssh/"
+    #     recurse: true
+    #     patterns: "id_*"
+    #   register: keys_to_copy
+    # - debug: msg= "{{ keys_to_copy.files }}"
+
     - name: Syncing SSH files
       copy:
         src: "~/{{ item }}"
@@ -46,10 +54,12 @@
       register: copy_msg
       loop_control:
         label: " ~/{{ item }}"
-      with_items:
+      with_items: # "{{ keys_to_copy.files.path + [ '.ssh/authorized_keys' ] }}"
         - ".ssh/authorized_keys"
         - ".ssh/id_dsa"
         - ".ssh/id_dsa.pub"
+        - ".ssh/id_ed25519_github"
+        - ".ssh/id_ed25519_github.pub"
 
         #    - name: Copy messages
         #      debug:
