@@ -56,6 +56,7 @@
         label: " ~/{{ item }}"
       with_items: # "{{ keys_to_copy.files.path + [ '.ssh/authorized_keys' ] }}"
         - ".ssh/authorized_keys"
+        - ".ssh/config"
         - ".ssh/id_rsa"
         - ".ssh/id_rsa.pub"
         - ".ssh/id_ed25519_github"
