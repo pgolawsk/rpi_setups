@@ -9,9 +9,10 @@ This repository contains Ansible scripts for following tasks I do on regular bas
 * ```playbooks/sync_profiles.yml``` - this is syncing dot ```.``` main files as ```.profile``` and a few more on ```[all]``` nodes with 1st node in  inventory file
 * ```playbook/nano_highlighters.yaml``` - it copies ```*.nanorc``` common syntax highlighters into ```[workstations]``` nodes
 
-Before running it please create valid inventory file - see example in ```inventory_example.ini```
 
 ## Usage
+Before running it please create valid inventory file - see example in ```inventory_example.ini```
+
 Example of using specific playbook
 
 ```bash
