@@ -1,7 +1,7 @@
 ---
 # Install syntax highlighters for nano
-- name: Install nano syntax highilights on WORKSTATION nodes only
-  hosts: workstations
+- name: Install nano syntax highilights on WORKSTATION and CLOUD nodes only
+  hosts: workstations, cloud
   become: true
 
   vars_files:
