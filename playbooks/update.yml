@@ -1,13 +1,15 @@
 ---
 # Based on https://docs.ansible.com/ansible/latest
 # /collections/ansible/builtin/apt_module.html#examples
+# Pawelo, 20241129, fix for START name/message
+
 - name: >-
     UPGRADE operation on ALL of the nodes
     (*WARNING* includes reboot if needed, including localhost)
   hosts: all
   become: true
   tasks:
-    - name: Update all repos and perfrom upgrade to latest versions
+    - name: Update all repos and perform upgrade to latest versions
       register: upgrade_status
       apt:
         # * upgrade is expecting a string value. In addition to yes and no you can use dist, full, or safe
