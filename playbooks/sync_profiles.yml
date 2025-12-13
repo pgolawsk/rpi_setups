@@ -2,6 +2,7 @@
 #* Synchronize nodes setups with current one
 # Pawelo, 20251213, added .mailrc and smartmon.sh to synced files
 # Pawelo, 20251213, skipping not existing files on src node
+# Pawelo, 20251213, preserving ownership for exe files
 ####################
 
 - name: >-
@@ -19,6 +20,8 @@
         path: "~/{{ item }}"
       register: config_files
       run_once: true
+      loop_control:
+        label: " ~/{{ item }}"
       with_items:
         - ".profile"
         - ".vimrc"
@@ -56,7 +59,7 @@
         owner: "{{ item.stat.uid }}"
         group: "{{ item.stat.gid }}"
         backup: yes
-      become: yes
+      become: true
       when: item.stat.exists
       loop: "{{ exec_files.results }}"
       loop_control:
