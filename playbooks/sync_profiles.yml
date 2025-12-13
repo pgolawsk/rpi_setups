@@ -36,7 +36,7 @@
       when: item.stat.exists
       loop: "{{ config_files.results }}"
       loop_control:
-        label: " {{ item.stat.path }}"
+        label: " {{ item.stat.path | default(item.item) }}"
 
     - name: Check if executable files exists
       stat:
