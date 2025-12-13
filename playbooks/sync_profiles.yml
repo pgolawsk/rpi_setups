@@ -36,7 +36,7 @@
       when: item.stat.exists
       loop: "{{ config_files.results }}"
       loop_control:
-        label: " ~/{{ item }}"
+        label: " {{ item.stat.path }}"
 
     - name: Check if executable files exists
       stat:
@@ -55,7 +55,7 @@
         mode: "0744"
         backup: yes
       when: item.stat.exists
-      loop: "{{ controller_files.results }}"
+      loop: "{{ exec_files.results }}"
       loop_control:
         label: "{{ item.stat.path }}"
 
