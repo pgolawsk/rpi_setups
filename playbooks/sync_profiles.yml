@@ -52,12 +52,15 @@
       copy:
         src: "{{ item.stat.path }}"
         dest: "{{ item.stat.path }}"
-        mode: "0744"
+        mode: "0755"
+        owner: "{{ item.stat.uid }}"
+        group: "{{ item.stat.gid }}"
         backup: yes
+      become: yes
       when: item.stat.exists
       loop: "{{ exec_files.results }}"
       loop_control:
-        label: "{{ item.stat.path }}"
+        label: "{{ item.stat.path | default(item.item) }}"
 
     # - name: Find SSH keys to copy
     #   find:
