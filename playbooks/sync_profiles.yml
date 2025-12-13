@@ -1,6 +1,7 @@
 ---
 #* Synchronize nodes setups with current one
 # Pawelo, 20251213, added .mailrc and smartmon.sh to synced files
+# Pawelo, 20251213, skipping not existing files on src node
 ####################
 
 - name: >-
@@ -13,14 +14,11 @@
 
   tasks:
 
-    - name: Syncing following user config files
-      copy:
-        src: "~/{{ item }}"
-        dest: "~/"
-        mode: 0644
-      register: copy_msg
-      loop_control:
-        label: " ~/{{ item }}"
+    - name: Check which user config (dot) files exists in home directory
+      stat:
+        path: "~/{{ item }}"
+      register: config_files
+      run_once: true
       with_items:
         - ".profile"
         - ".vimrc"
@@ -28,21 +26,38 @@
         - ".mailrc"
         - ".gitconfig"
         - ".dropbox_uploader"
-        #        - ".backups.config"
-        #        - ".backups-filelist"
         - ".backups-filelist-common"
+
+    - name: Syncing following user config files (ONLY in HOME directory)
+      copy:
+        src: "~/{{ item.item }}"
+        dest: "~/"
+        mode: "0644"
+      when: item.stat.exists
+      loop: "{{ config_files.results }}"
+      loop_control:
+        label: " ~/{{ item }}"
+
+    - name: Check if executable files exists
+      stat:
+        path: "{{ item }}"
+      register: exec_files
+      delegate_to: localhost
+      run_once: true
+      loop:
+        - "~/.backups.sh"
+        - "/usr/local/bin/smartmon.sh"
 
     - name: Syncing following user executable files
       copy:
-        src: "~/{{ item }}"
-        dest: "~/"
-        mode: 0744
-      register: copy_msg
+        src: "{{ item.stat.path }}"
+        dest: "{{ item.stat.path }}"
+        mode: "0744"
+        backup: yes
+      when: item.stat.exists
+      loop: "{{ controller_files.results }}"
       loop_control:
-        label: " ~/{{ item }}"
-      with_items:
-        - ".backups.sh"
-        - "/usr/local/bin/smartmon.sh"
+        label: "{{ item.stat.path }}"
 
     # - name: Find SSH keys to copy
     #   find:
