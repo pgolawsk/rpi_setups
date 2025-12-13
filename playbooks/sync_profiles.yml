@@ -1,8 +1,11 @@
 ---
-# Synchronize nodes setups with current one
+#* Synchronize nodes setups with current one
+# Pawelo, 20251213, added .mailrc and smartmon.sh to synced files
+####################
+
 - name: >-
-    COPY user setup (.profile, .vimrc, .nanorc, .ssh/,
-    .gitconfig, .backups.sh) to the rest nodes
+    COPY user setup (.profile, .vimrc, .nanorc, .mailrc, .ssh/,
+    .gitconfig, .backups.sh, smartmon.sh) to the rest nodes
   #  hosts: all
   # all nodes except the first one in inventory file i
   # (if playbook runs from one of managed servers)
@@ -22,10 +25,12 @@
         - ".profile"
         - ".vimrc"
         - ".nanorc"
+        - ".mailrc"
         - ".gitconfig"
         - ".dropbox_uploader"
         #        - ".backups.config"
         #        - ".backups-filelist"
+        - ".backups-filelist-common"
 
     - name: Syncing following user executable files
       copy:
@@ -37,6 +42,7 @@
         label: " ~/{{ item }}"
       with_items:
         - ".backups.sh"
+        - "/usr/local/bin/smartmon.sh"
 
     # - name: Find SSH keys to copy
     #   find:
