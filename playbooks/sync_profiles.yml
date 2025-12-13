@@ -63,7 +63,7 @@
       when: item.stat.exists
       loop: "{{ exec_files.results }}"
       loop_control:
-        label: "{{ item.stat.path | default(item.item) }}"
+        label: " {{ item.stat.path | default(item.item) }}"
 
     # - name: Find SSH keys to copy
     #   find:
