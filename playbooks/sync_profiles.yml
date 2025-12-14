@@ -5,7 +5,7 @@
 # Pawelo, 20251213, preserving ownership for exe files
 # Pawelo, 20251214, refactoring to eliminate ~ for explicit paths
 # Pawelo, 20251214, split SSH files into common, public keys and private keys
-# Pawelo, 20251214, replace all[1:] by setecting source_host and skipping selected actions
+# Pawelo, 20251214, replace all[1:] by selecting source_host and skipping selected actions
 ####################
 
 - name: >-
