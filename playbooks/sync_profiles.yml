@@ -3,6 +3,7 @@
 # Pawelo, 20251213, added .mailrc and smartmon.sh to synced files
 # Pawelo, 20251213, skipping not existing files on src node
 # Pawelo, 20251213, preserving ownership for exe files
+# Pawelo, 20251214, refactoring to eliminate ~ for explicit paths
 ####################
 
 - name: >-
@@ -12,16 +13,20 @@
   # all nodes except the first one in inventory file i
   # (if playbook runs from one of managed servers)
   hosts: all[1:]
+  vars:
+    source_host: "{{ groups['all'][0] }}"
+    user_home: "{{ ansible_env.HOME }}"
 
   tasks:
 
     - name: Check which user config (dot) files exists in home directory
       stat:
-        path: "~/{{ item }}"
-      register: config_files
+        path: "{{ user_home }}/{{ item }}"
+      delegate_to: "{{ source_host }}"
       run_once: true
+      register: config_files
       loop_control:
-        label: " ~/{{ item }}"
+        label: " {{ user_home }}/{{ item }}"
       with_items:
         - ".profile"
         - ".vimrc"
@@ -33,8 +38,8 @@
 
     - name: Syncing following user config files (ONLY in HOME directory)
       copy:
-        src: "~/{{ item.item }}"
-        dest: "~/"
+        src: "{{ item.stat.path }}"
+        dest: "{{ user_home }}/"
         mode: "0644"
       when: item.stat.exists
       loop: "{{ config_files.results }}"
@@ -44,11 +49,11 @@
     - name: Check if executable files exists
       stat:
         path: "{{ item }}"
-      register: exec_files
       delegate_to: localhost
       run_once: true
+      register: exec_files
       loop:
-        - "~/.backups.sh"
+        - "{{ lookup('env','HOME') }}/.backups.sh"
         - "/usr/local/bin/smartmon.sh"
 
     - name: Syncing following user executable files
@@ -75,8 +80,8 @@
 
     - name: Syncing SSH files
       copy:
-        src: "~/{{ item }}"
-        dest: "~/.ssh/"
+        src: "{{ user_home }}/{{ item }}"
+        dest: "{{ user_home }}/.ssh/{{ item | basename }}"
         mode: 0600
       register: copy_msg
       loop_control:
@@ -93,3 +98,4 @@
         #      debug:
         #        msg: "{{ copy_msg.stdout_lines }}"
         #
+
