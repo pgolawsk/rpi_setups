@@ -5,6 +5,7 @@
 # Pawelo, 20251213, preserving ownership for exe files
 # Pawelo, 20251214, refactoring to eliminate ~ for explicit paths
 # Pawelo, 20251214, split SSH files into common, public keys and private keys
+# Pawelo, 20251214, replace all[1:] by setecting source_host and skipping selected actions
 ####################
 
 - name: >-
@@ -13,9 +14,9 @@
   #  hosts: all
   # all nodes except the first one in inventory file i
   # (if playbook runs from one of managed servers)
-  hosts: all[1:]
+  hosts: all
   vars:
-    source_host: "{{ groups['all'][0] }}"
+    source_host: "{{ ansible_play_hosts_all[0] }}"
     user_home: "{{ ansible_env.HOME }}"
 
   tasks:
@@ -42,7 +43,9 @@
         src: "{{ item.stat.path }}"
         dest: "{{ user_home }}/"
         mode: "0644"
-      when: item.stat.exists
+      when:
+        - inventory_hostname != source_host
+        - item.stat.exists
       loop: "{{ config_files.results }}"
       loop_control:
         label: " {{ item.stat.path | default(item.item) }}"
@@ -66,7 +69,9 @@
         group: "{{ item.stat.gid }}"
         backup: yes
       become: true
-      when: item.stat.exists
+      when:
+        - inventory_hostname != source_host
+        - item.stat.exists
       loop: "{{ exec_files.results }}"
       loop_control:
         label: " {{ item.stat.path | default(item.item) }}"
@@ -87,6 +92,8 @@
       register: copy_msg
       loop_control:
         label: " {{ user_home }}/{{ item }}"
+      when:
+        - inventory_hostname != source_host
       with_items:
         - ".ssh/authorized_keys"
         - ".ssh/config"
@@ -99,6 +106,8 @@
       register: copy_pub
       loop_control:
         label: " {{ user_home }}/{{ item }}"
+      when:
+        - inventory_hostname != source_host
       with_items:
         - ".ssh/id_rsa.pub"
         - ".ssh/id_ed25519_github.pub"
@@ -121,7 +130,7 @@
       loop: "{{ ssh_private_keys.results }}"
       loop_control:
         label: " {{ user_home }}/.ssh/{{ item.stat.path | basename }}"
-      when: 
+      when:
         - inventory_hostname in groups['ssh_private_keys_targets']
         - inventory_hostname != source_host
         - item.stat.exists
