@@ -4,6 +4,7 @@
 # Pawelo, 20251213, skipping not existing files on src node
 # Pawelo, 20251213, preserving ownership for exe files
 # Pawelo, 20251214, refactoring to eliminate ~ for explicit paths
+# Pawelo, 20251214, split SSH files into common, public keys and private keys
 ####################
 
 - name: >-
@@ -22,7 +23,7 @@
     - name: Check which user config (dot) files exists in home directory
       stat:
         path: "{{ user_home }}/{{ item }}"
-      delegate_to: "{{ source_host }}"
+      delegate_to: localhost
       run_once: true
       register: config_files
       loop_control:
@@ -78,24 +79,51 @@
     #   register: keys_to_copy
     # - debug: msg= "{{ keys_to_copy.files }}"
 
-    - name: Syncing SSH files
+    - name: Syncing SSH common files
       copy:
         src: "{{ user_home }}/{{ item }}"
         dest: "{{ user_home }}/.ssh/{{ item | basename }}"
-        mode: 0600
+        mode: "0644"
       register: copy_msg
       loop_control:
-        label: " ~/{{ item }}"
-      with_items: # "{{ keys_to_copy.files.path + [ '.ssh/authorized_keys' ] }}"
+        label: " {{ user_home }}/{{ item }}"
+      with_items:
         - ".ssh/authorized_keys"
         - ".ssh/config"
-        - ".ssh/id_rsa"
+
+    - name: Syncing SSH public keys
+      copy:
+        src: "{{ user_home }}/{{ item }}"
+        dest: "{{ user_home }}/.ssh/{{ item | basename }}"
+        mode: "0600"
+      register: copy_pub
+      loop_control:
+        label: " {{ user_home }}/{{ item }}"
+      with_items:
         - ".ssh/id_rsa.pub"
-        - ".ssh/id_ed25519_github"
         - ".ssh/id_ed25519_github.pub"
 
-        #    - name: Copy messages
-        #      debug:
-        #        msg: "{{ copy_msg.stdout_lines }}"
-        #
+    - name: Check SSH private keys on source host
+      stat:
+        path: "{{ user_home }}/{{ item }}"
+      delegate_to: localhost
+      run_once: true
+      register: ssh_private_keys
+      loop:
+        - .ssh/id_rsa
+        - .ssh/id_ed25519_github
+
+    - name: Sync SSH private keys (selected nodes only)
+      copy:
+        src: "{{ item.stat.path }}"
+        dest: "{{ user_home }}/.ssh/{{ item.stat.path | basename }}"
+        mode: "0600"
+      loop: "{{ ssh_private_keys.results }}"
+      loop_control:
+        label: " {{ user_home }}/.ssh/{{ item.stat.path | basename }}"
+      when: 
+        - inventory_hostname in groups['ssh_private_keys_targets']
+        - inventory_hostname != source_host
+        - item.stat.exists
+      no_log: true # do not display anything on screen for security reasons
 
