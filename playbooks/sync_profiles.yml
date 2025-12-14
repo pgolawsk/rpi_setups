@@ -6,6 +6,7 @@
 # Pawelo, 20251214, refactoring to eliminate ~ for explicit paths
 # Pawelo, 20251214, split SSH files into common, public keys and private keys
 # Pawelo, 20251214, replace all[1:] by selecting source_host and skipping selected actions
+# Pawelo, 20251214, mode for SSH files adjustments
 ####################
 
 - name: >-
@@ -24,7 +25,7 @@
     - name: Check which user config (dot) files exists in home directory
       stat:
         path: "{{ user_home }}/{{ item }}"
-      delegate_to: localhost
+      delegate_to: "{{ source_host }}"
       run_once: true
       register: config_files
       loop_control:
@@ -53,7 +54,7 @@
     - name: Check if executable files exists
       stat:
         path: "{{ item }}"
-      delegate_to: localhost
+      delegate_to: "{{ source_host }}"
       run_once: true
       register: exec_files
       loop:
@@ -84,11 +85,18 @@
     #   register: keys_to_copy
     # - debug: msg= "{{ keys_to_copy.files }}"
 
+    - name: "Ensure ~/.ssh directory exists"
+      file:
+        path: "{{ user_home }}/.ssh"
+        state: directory
+        mode: "0700"
+      when: inventory_hostname != source_host
+
     - name: Syncing SSH common files
       copy:
         src: "{{ user_home }}/{{ item }}"
         dest: "{{ user_home }}/.ssh/{{ item | basename }}"
-        mode: "0644"
+        mode: "0600"
       register: copy_msg
       loop_control:
         label: " {{ user_home }}/{{ item }}"
@@ -102,7 +110,7 @@
       copy:
         src: "{{ user_home }}/{{ item }}"
         dest: "{{ user_home }}/.ssh/{{ item | basename }}"
-        mode: "0600"
+        mode: "0644"
       register: copy_pub
       loop_control:
         label: " {{ user_home }}/{{ item }}"
@@ -115,7 +123,7 @@
     - name: Check SSH private keys on source host
       stat:
         path: "{{ user_home }}/{{ item }}"
-      delegate_to: localhost
+      delegate_to: "{{ source_host }}"
       run_once: true
       register: ssh_private_keys
       loop:
