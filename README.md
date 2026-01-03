@@ -19,9 +19,15 @@ Example of using specific playbook
 ansible-playbook -i my_inventory_file.ini playbooks/update.yml
 ```
 
+## Enhancements implemented
+
+- [x] ```sync_profiles.yml``` - to copy whatever ```id_*``` files are in ```.ssh``` directory
+- [x] ```sync_profiles.yml``` - to make it resilent if the original files are not found (like ```.backup.sh```)
+
+
 ## My future plans for playbooks (TODO)
 
-- [ ] ```sync_profiles.yml``` - to copy whatever ```id_*``` files are in ```.ssh``` directory
+- [ ] ```sync_profiles.yml``` - to sync relevant (not all) files also with OpenWRT and MacOS
 - [ ] ___all___ - to make it resilent if the original files are not found (like ```.backup.sh```)
 
 [//]: # (None at the moment)
