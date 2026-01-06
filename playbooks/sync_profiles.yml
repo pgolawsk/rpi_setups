@@ -9,6 +9,8 @@
 # Pawelo, 20251214, mode for SSH files adjustments
 # Pawelo, 20251225, modularized .profile (added .common_aliases, .common_functions, .server)
 # Pawelo, 20260103, add .env to sync as SECRET and teregram-notify.sh as EXEC
+# Pawelo, 20260104, add cron-wrapper.sh as EXEC
+# Pawelo, 20260104, add .config/rclone/rclone.conf as SECRET
 ####################
 
 - name: >-
@@ -66,6 +68,7 @@
         - ".env"
         - ".dropbox_uploader"
         - ".backups-filelist-common"
+        - ".config/rclone/rclone.conf"
 
     - name: Syncing following user SECRETS files (ONLY in HOME directory)
       copy:
@@ -90,6 +93,7 @@
         - "{{ lookup('env','HOME') }}/.backups.sh"
         - "/usr/local/bin/smartmon.sh"
         - "/usr/local/bin/telegram-notify.sh"
+        - "/usr/local/bin/cron-wrapper.sh"
 
     - name: Syncing following user EXECs files
       copy:
