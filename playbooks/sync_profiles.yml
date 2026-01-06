@@ -10,7 +10,8 @@
 # Pawelo, 20251225, modularized .profile (added .common_aliases, .common_functions, .server)
 # Pawelo, 20260103, add .env to sync as SECRET and teregram-notify.sh as EXEC
 # Pawelo, 20260104, add cron-wrapper.sh as EXEC
-# Pawelo, 20260104, add .config/rclone/rclone.conf as SECRET
+# Pawelo, 20260106, add .config/rclone/rclone.conf as SECRET
+# Pawelo, 20260106, fix - recreate sub directories for  SECRETS
 ####################
 
 - name: >-
@@ -70,10 +71,20 @@
         - ".backups-filelist-common"
         - ".config/rclone/rclone.conf"
 
+    - name: Ensure SECRETS parent directory for each item exists
+      file:
+        path: "{{ item.stat.path | dirname }}"
+        state: directory
+        mode: "0700"
+      when:
+        - inventory_hostname != source_host
+        - item.stat.exists
+      loop: "{{ secrets_files.results }}"
+
     - name: Syncing following user SECRETS files (ONLY in HOME directory)
       copy:
         src: "{{ item.stat.path }}"
-        dest: "{{ user_home }}/"
+        dest: "{{ item.stat.path }}"
         mode: "0600"
       when:
         - inventory_hostname != source_host
