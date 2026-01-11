@@ -13,6 +13,7 @@
 # Pawelo, 20260106, add .config/rclone/rclone.conf as SECRETS sync
 # Pawelo, 20260106, fix - recreate sub directories for SECRETS sync
 # Pawelo, 20260106, add .bashrc as PROFILE sync
+# Pawelo, 20260106, add docker_metrics_textfile.sh as EXEC sync
 ####################
 
 - name: >-
@@ -109,6 +110,7 @@
         - "/usr/local/bin/smartmon.sh"
         - "/usr/local/bin/telegram-notify.sh"
         - "/usr/local/bin/cron-wrapper.sh"
+        - "/usr/local/bin/docker_metrics_textfile.sh"
 
     - name: Syncing following user EXECs files
       copy:
