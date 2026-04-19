@@ -14,6 +14,7 @@
 # Pawelo, 20260106, fix - recreate sub directories for SECRETS sync
 # Pawelo, 20260106, add .bashrc as PROFILE sync
 # Pawelo, 20260106, add docker_metrics_textfile.sh as EXEC sync
+# Pawelo, 20260419, add .backups-excludelist as SECRETS sync
 ####################
 
 - name: >-
@@ -72,6 +73,7 @@
         - ".env"
         - ".dropbox_uploader"
         - ".backups-filelist-common"
+        - ".backups-excludelist-common"
         - ".config/rclone/rclone.conf"
 
     - name: Ensure SECRETS parent directory for each item exists
