@@ -46,6 +46,7 @@
         - ".server"
         - ".vimrc"
         - ".nanorc"
+        - ".tmux.conf"
         - ".mailrc"
         - ".gitconfig"
 
