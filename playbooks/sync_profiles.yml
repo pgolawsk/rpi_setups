@@ -15,6 +15,7 @@
 # Pawelo, 20260106, add .bashrc as PROFILE sync
 # Pawelo, 20260106, add docker_metrics_textfile.sh as EXEC sync
 # Pawelo, 20260419, add .backups-excludelist as SECRETS sync
+# Larry, 20261021, add .ssh/known_hosts as SSH sync (0644, overwrites host-local entries)
 ####################
 
 - name: >-
@@ -160,6 +161,14 @@
         - ".ssh/authorized_keys"
         - ".ssh/config"
 
+    - name: Syncing SSH known_hosts (source host's file replaces the local one)
+      copy:
+        src: "{{ user_home }}/.ssh/known_hosts"
+        dest: "{{ user_home }}/.ssh/known_hosts"
+        mode: "0644"
+      when:
+        - inventory_hostname != source_host
+
     - name: Syncing SSH public keys
       copy:
         src: "{{ user_home }}/{{ item }}"
@@ -197,4 +206,3 @@
         - inventory_hostname != source_host
         - item.stat.exists
       no_log: true # do not display anything on screen for security reasons
-
