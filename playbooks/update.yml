@@ -4,6 +4,7 @@
 # Pawelo, 20241129, fix for START name/message
 # HAL, 20261003, hold Docker engine packages (upgrade restarted dockerd, homeassistant failed to come back)
 # HAL, 20261021, Docker hold removed - live-restore on all Docker hosts keeps containers running across upgrades
+# HAL, 20261023, restart docker.sock-mounting containers after a Docker engine upgrade (stale socket with live-restore)
 
 - name: >-
     UPGRADE operation on ALL of the nodes
@@ -13,6 +14,12 @@
   tasks:
     - name: Gather installed packages
       package_facts:
+      tags: docker_sock_restart
+
+    - name: Remember Docker engine package versions before upgrade
+      set_fact:
+        docker_pkgs_before: "{{ ansible_facts.packages | dict2items | selectattr('key', 'in', ['docker-ce', 'docker-ce-cli', 'containerd.io']) | list }}"
+      tags: docker_sock_restart
 
     # live-restore (/etc/docker/daemon.json) keeps containers running across dockerd restart (patch releases)
     - name: Unhold Docker engine packages (held 2026-10-03..2026-10-21, now upgraded with the rest)
@@ -34,6 +41,32 @@
       debug: msg="{{ upgrade_status.stdout_lines }}"
       when: "upgrade_status.stdout.find('0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.') == -1 \
       and upgrade_status.stdout.find('No packages will be installed, upgraded, or removed.') == -1"
+
+    - name: Gather installed packages after upgrade (Docker hosts only)
+      package_facts:
+      when: docker_pkgs_before | length > 0
+      tags: docker_sock_restart
+
+    # dockerd restart recreates /var/run/docker.sock; with live-restore the containers bind-mounting it
+    # (watchtower, portainer, agents) keep the old dead socket -> restart them. Same as runbook x_ubuntu_install_docker.sh
+    # test without an upgrade: --tags docker_sock_restart -e force_docker_sock_restart=true
+    - name: Restart containers bind-mounting docker.sock if Docker engine packages were upgraded
+      register: docker_sock_restart
+      shell: !unsafe >-
+        for c in $(docker ps -q); do docker inspect "$c" --format '{{.Name}}{{range .Mounts}}{{if eq .Source "/var/run/docker.sock"}} SOCK{{end}}{{end}}'; done
+        | awk '/SOCK/{sub("/","",$1); print $1}' | xargs -r docker restart
+      changed_when: docker_sock_restart.stdout | length > 0
+      when: >-
+        docker_pkgs_before | length > 0 and
+        (force_docker_sock_restart | default(false) | bool or
+        docker_pkgs_before != (ansible_facts.packages | dict2items
+        | selectattr('key', 'in', ['docker-ce', 'docker-ce-cli', 'containerd.io']) | list))
+      tags: docker_sock_restart
+
+    - name: Show restarted containers
+      debug: msg="{{ docker_sock_restart.stdout_lines }}"
+      when: docker_sock_restart is changed
+      tags: docker_sock_restart
 
     - name: Check if a reboot is needed
       register: reboot_required_file
